@@ -10,7 +10,7 @@ import { getTheme } from './utils/theme';
 
 function App() {
   const { notes, addNote, updateNote, deleteNote, exportNotes, importNotes } = useNotes();
-  const { settings, setSettings, addKeyword, removeKeyword } = useSettings();
+  const { settings, setSettings, addKeyword, removeKeyword, exportSettings, importSettings } = useSettings();
   const { isDark, setIsDark } = useTheme();
 
   const [isSearchMode, setIsSearchMode] = useState(false);
@@ -60,6 +60,8 @@ function App() {
                   removeKeyword={removeKeyword}
                   onExport={exportNotes}
                   onImport={importNotes}
+                  onExportSettings={exportSettings}
+                  onImportSettings={importSettings}
                   theme={theme}
                   isDark={isDark}
                 />

@@ -17,14 +17,14 @@ export const NotesList = ({ notes, onUpdate, onDelete, theme, isDark, settings }
     return (
         <div className="flex-1 overflow-y-auto px-6 pt-4 pb-24 scrollbar-hide">
             {notes.map((note) => {
-                const isExpanded = settings.showFullText || expandedNoteId === note.id;
+                const isExpanded = expandedNoteId === note.id;
 
                 return (
                     <NoteItem
                         key={note.id}
                         note={note}
                         isExpanded={isExpanded}
-                        onExpand={() => !settings.showFullText && setExpandedNoteId(note.id)}
+                        onExpand={() => setExpandedNoteId(note.id)}
                         onUpdate={(content) => onUpdate(note.id, content)}
                         onDelete={() => { onDelete(note.id); setExpandedNoteId(null); }}
                         onSave={() => setExpandedNoteId(null)}

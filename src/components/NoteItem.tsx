@@ -46,21 +46,51 @@ export const NoteItem = ({
         }
     };
 
+    const renderFullText = () => {
+        const lines = note.content.split('\n');
+
+        return (
+            <div className="whitespace-pre-wrap">
+                {lines.map((line, idx) => {
+                    const parts = line.split(/^([\w]+:)/i);
+
+                    if (parts.length > 1 && parts[1]) {
+                        const tag = parts[1].toLowerCase().replace(':', '');
+                        const colorClass = getKeywordColor(tag, isDark);
+
+                        return (
+                            <div key={idx} className="text-[16px] leading-[1.75rem]">
+                                <span className={`${colorClass} font-bold`}>{parts[1]}</span>
+                                <span className={theme.text}>{parts[2]}</span>
+                            </div>
+                        );
+                    }
+
+                    return (
+                        <div key={idx} className={`${theme.text} text-[16px] leading-[1.75rem]`}>
+                            {line || '\u00A0'}
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    };
+
     const renderPreview = () => {
         const lines = note.content.split('\n');
         const firstLine = lines[0];
         const hasMore = lines.length > 1 || firstLine.length > 50;
 
-        const parts = firstLine.split(/^(todo:|idea:|listen:|read:)/i);
+        const parts = firstLine.split(/^([\w]+:)/i);
         let contentNode;
 
-        if (parts.length > 1) {
+        if (parts.length > 1 && parts[1]) {
             const tag = parts[1].toLowerCase().replace(':', '');
-            const tagColor = getKeywordColor(tag, isDark);
+            const colorClass = getKeywordColor(tag, isDark);
 
             contentNode = (
                 <div className={`truncate pr-4 text-[16px]`}>
-                    <span className={`${tagColor} font-bold mr-1`}>{parts[1]}</span>
+                    <span className={`${colorClass} font-bold mr-1`}>{parts[1]}</span>
                     <span className={theme.text}>{parts[2]}</span>
                 </div>
             );
@@ -78,19 +108,25 @@ export const NoteItem = ({
         );
     };
 
+    // Determine what to show
+    const shouldShowEditMode = isExpanded;
+    const shouldShowFullText = showFullText && !isExpanded;
+    const shouldShowPreview = !showFullText && !isExpanded;
+
     return (
         <div
-            className={`group relative transition-all duration-300 ease-in-out mb-8 ${isExpanded ? '' : 'cursor-pointer'}`}
-            onClick={() => !isExpanded && onExpand()}
+            className={`group relative transition-all duration-300 ease-in-out mb-8 ${shouldShowEditMode ? '' : 'cursor-pointer'}`}
+            onClick={() => !shouldShowEditMode && onExpand()}
         >
-            {isExpanded ? (
+            {shouldShowEditMode ? (
+                // Edit mode - show textarea with buttons (works for both preview and full text mode)
                 <div className="flex gap-3 w-full items-start">
                     <div className="flex-1 min-w-0">
                         <textarea
                             ref={textareaRef}
                             value={note.content}
                             onChange={(e) => handleTextChange(e.target.value)}
-                            onBlur={() => !showFullText && onSave()}
+                            onBlur={() => onSave()}
                             className={`w-full bg-transparent text-[16px] leading-[1.75rem] ${theme.text} 
                          outline-none resize-none overflow-hidden font-normal p-0 m-0 block`}
                             spellCheck={false}
@@ -115,7 +151,11 @@ export const NoteItem = ({
                         </button>
                     </div>
                 </div>
+            ) : shouldShowFullText ? (
+                // Full text display mode - clickable to edit
+                <div>{renderFullText()}</div>
             ) : (
+                // Preview mode - show truncated preview
                 <div>{renderPreview()}</div>
             )}
 

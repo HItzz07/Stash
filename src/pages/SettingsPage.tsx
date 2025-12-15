@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Download, Upload, X } from 'lucide-react';
 import type { Theme, SettingsConfig } from '../types';
-import { getKeywordColor } from '../utils/helpers';
+import { getKeywordColor, generateColorForKeyword } from '../utils/helpers';
 
 interface SettingsPageProps {
     settings: SettingsConfig;
@@ -10,6 +10,8 @@ interface SettingsPageProps {
     removeKeyword: (keyword: string) => void;
     onExport: () => void;
     onImport: (file: File) => void;
+    onExportSettings: () => void;
+    onImportSettings: (file: File) => void;
     theme: Theme;
     isDark: boolean;
 }
@@ -21,11 +23,14 @@ export const SettingsPage = ({
     removeKeyword,
     onExport,
     onImport,
+    onExportSettings,
+    onImportSettings,
     theme,
     isDark,
 }: SettingsPageProps) => {
     const [newKeyword, setNewKeyword] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const settingsFileInputRef = useRef<HTMLInputElement>(null);
 
     const handleAddKeyword = () => {
         addKeyword(newKeyword);
@@ -35,6 +40,22 @@ export const SettingsPage = ({
     const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) onImport(file);
+    };
+
+    const handleImportSettings = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) onImportSettings(file);
+    };
+
+    const getColorStyle = (keyword: string) => {
+        // For default keywords, use getKeywordColor
+        const defaultKeywords = ['todo', 'idea', 'listen', 'read'];
+        if (defaultKeywords.includes(keyword)) {
+            return {};
+        }
+        // For custom keywords, generate and apply color
+        const color = generateColorForKeyword(keyword, isDark);
+        return { color };
     };
 
     return (
@@ -64,9 +85,9 @@ export const SettingsPage = ({
                 </div>
             </div>
 
-            {/* Export/Import */}
+            {/* Export/Import Notes */}
             <div className="mb-6">
-                <h4 className={`text-sm font-semibold ${theme.text} mb-3`}>Export & Import</h4>
+                <h4 className={`text-sm font-semibold ${theme.text} mb-3`}>Notes Backup</h4>
                 <div className="flex gap-3">
                     <button
                         onClick={onExport}
@@ -92,13 +113,44 @@ export const SettingsPage = ({
                 </div>
             </div>
 
+            {/* Export/Import Settings */}
+            <div className="mb-6">
+                <h4 className={`text-sm font-semibold ${theme.text} mb-3`}>Settings Backup</h4>
+                <div className="flex gap-3">
+                    <button
+                        onClick={onExportSettings}
+                        className={`flex-1 ${theme.bgSecondary} hover:${theme.accent} hover:${theme.accentText} px-4 py-3 rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-2`}
+                    >
+                        <Download className="w-4 h-4" />
+                        Export Settings
+                    </button>
+                    <button
+                        onClick={() => settingsFileInputRef.current?.click()}
+                        className={`flex-1 ${theme.bgSecondary} hover:${theme.accent} hover:${theme.accentText} px-4 py-3 rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-2`}
+                    >
+                        <Upload className="w-4 h-4" />
+                        Import Settings
+                    </button>
+                    <input
+                        ref={settingsFileInputRef}
+                        type="file"
+                        accept=".json"
+                        onChange={handleImportSettings}
+                        className="hidden"
+                    />
+                </div>
+            </div>
+
             {/* Colored Keywords */}
             <div className="mb-6">
                 <h4 className={`text-sm font-semibold ${theme.text} mb-3`}>Colored Keywords</h4>
                 <div className={`${theme.bgSecondary} rounded-xl p-4 mb-3`}>
                     {settings.coloredKeywords.map(keyword => (
                         <div key={keyword} className="flex items-center justify-between mb-3 last:mb-0">
-                            <span className={`text-sm ${getKeywordColor(keyword, isDark)} font-medium`}>
+                            <span
+                                className={`text-sm font-medium ${getKeywordColor(keyword, isDark)}`}
+                                style={getColorStyle(keyword)}
+                            >
                                 {keyword}:
                             </span>
                             <button
@@ -133,7 +185,7 @@ export const SettingsPage = ({
                 <label className={`flex items-center justify-between cursor-pointer ${theme.bgSecondary} rounded-xl p-4`}>
                     <div>
                         <span className={`text-sm ${theme.text} block mb-1`}>Always show full text</span>
-                        <span className={`text-xs ${theme.textMuted}`}>Show complete note content instead of preview</span>
+                        <span className={`text-xs ${theme.textMuted}`}>Display complete note content (click to edit)</span>
                     </div>
                     <input
                         type="checkbox"

@@ -68,7 +68,7 @@ export const AddNoteModal = ({ isOpen, onClose, onAdd, theme, settings, isDark }
 
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         // Convert to lowercase
-        setInput(e.target.value.toLowerCase());
+        setInput(e.target.value);
     };
 
     const getKeywordDisplay = () => {

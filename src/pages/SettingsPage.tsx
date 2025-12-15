@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Download, Upload, X } from 'lucide-react';
 import type { Theme, SettingsConfig } from '../types';
-import { getKeywordColor, generateColorForKeyword } from '../utils/helpers';
+import { generateColorForKeyword } from '../utils/helpers';
 
 interface SettingsPageProps {
     settings: SettingsConfig;

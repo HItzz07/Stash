@@ -138,7 +138,6 @@ export const NoteItem = ({
 
     const shouldShowEditMode = isExpanded;
     const shouldShowFullText = showFullText && !isExpanded;
-    const shouldShowPreview = !showFullText && !isExpanded;
 
     return (
         <div

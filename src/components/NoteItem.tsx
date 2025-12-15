@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { Check, Trash2 } from 'lucide-react';
 import type { Note, Theme } from '../types';
-import { formatTime, getKeywordColor } from '../utils/helpers';
+import { formatTime, getKeywordColor, generateColorForKeyword } from '../utils/helpers';
 
 interface NoteItemProps {
     note: Note;
@@ -46,6 +46,22 @@ export const NoteItem = ({
         }
     };
 
+    const getKeywordStyle = (keyword: string) => {
+        const defaultKeywords = ['todo', 'idea', 'listen', 'read'];
+        if (defaultKeywords.includes(keyword)) {
+            return {}; // Use Tailwind class
+        }
+        return { color: generateColorForKeyword(keyword, isDark) };
+    };
+
+    const getKeywordClass = (keyword: string) => {
+        const defaultKeywords = ['todo', 'idea', 'listen', 'read'];
+        if (defaultKeywords.includes(keyword)) {
+            return getKeywordColor(keyword, isDark);
+        }
+        return ''; // Use inline style instead
+    };
+
     const renderFullText = () => {
         const lines = note.content.split('\n');
 
@@ -56,11 +72,17 @@ export const NoteItem = ({
 
                     if (parts.length > 1 && parts[1]) {
                         const tag = parts[1].toLowerCase().replace(':', '');
-                        const colorClass = getKeywordColor(tag, isDark);
+                        const colorClass = getKeywordClass(tag);
+                        const colorStyle = getKeywordStyle(tag);
 
                         return (
                             <div key={idx} className="text-[16px] leading-[1.75rem]">
-                                <span className={`${colorClass} font-bold`}>{parts[1]}</span>
+                                <span
+                                    className={`${colorClass} font-bold`}
+                                    style={colorStyle}
+                                >
+                                    {parts[1]}
+                                </span>
                                 <span className={theme.text}>{parts[2]}</span>
                             </div>
                         );
@@ -86,11 +108,17 @@ export const NoteItem = ({
 
         if (parts.length > 1 && parts[1]) {
             const tag = parts[1].toLowerCase().replace(':', '');
-            const colorClass = getKeywordColor(tag, isDark);
+            const colorClass = getKeywordClass(tag);
+            const colorStyle = getKeywordStyle(tag);
 
             contentNode = (
                 <div className={`truncate pr-4 text-[16px]`}>
-                    <span className={`${colorClass} font-bold mr-1`}>{parts[1]}</span>
+                    <span
+                        className={`${colorClass} font-bold mr-1`}
+                        style={colorStyle}
+                    >
+                        {parts[1]}
+                    </span>
                     <span className={theme.text}>{parts[2]}</span>
                 </div>
             );
@@ -108,7 +136,6 @@ export const NoteItem = ({
         );
     };
 
-    // Determine what to show
     const shouldShowEditMode = isExpanded;
     const shouldShowFullText = showFullText && !isExpanded;
     const shouldShowPreview = !showFullText && !isExpanded;
@@ -119,7 +146,6 @@ export const NoteItem = ({
             onClick={() => !shouldShowEditMode && onExpand()}
         >
             {shouldShowEditMode ? (
-                // Edit mode - show textarea with buttons (works for both preview and full text mode)
                 <div className="flex gap-3 w-full items-start">
                     <div className="flex-1 min-w-0">
                         <textarea
@@ -152,10 +178,8 @@ export const NoteItem = ({
                     </div>
                 </div>
             ) : shouldShowFullText ? (
-                // Full text display mode - clickable to edit
                 <div>{renderFullText()}</div>
             ) : (
-                // Preview mode - show truncated preview
                 <div>{renderPreview()}</div>
             )}
 

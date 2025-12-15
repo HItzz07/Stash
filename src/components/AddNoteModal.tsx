@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { X, CornerDownLeft } from 'lucide-react';
 import type { Theme, SettingsConfig } from '../types';
-import { getKeywordColor } from '../utils/helpers';
+import { getKeywordColor, generateColorForKeyword } from '../utils/helpers';
 
 interface AddNoteModalProps {
     isOpen: boolean;
@@ -14,6 +14,7 @@ interface AddNoteModalProps {
 
 export const AddNoteModal = ({ isOpen, onClose, onAdd, theme, settings, isDark }: AddNoteModalProps) => {
     const [input, setInput] = useState('');
+    const [suggestion, setSuggestion] = useState('');
     const inputRef = useRef<HTMLTextAreaElement>(null);
 
     useEffect(() => {
@@ -22,17 +23,77 @@ export const AddNoteModal = ({ isOpen, onClose, onAdd, theme, settings, isDark }
         }
     }, [isOpen]);
 
+    useEffect(() => {
+        // Find matching keyword for suggestion
+        if (input.length > 0 && !input.includes(':')) {
+            const matches = settings.coloredKeywords.filter(kw =>
+                kw.toLowerCase().startsWith(input.toLowerCase()) && kw.toLowerCase() !== input.toLowerCase()
+            );
+            if (matches.length > 0) {
+                setSuggestion(matches[0].slice(input.length) + ': ');
+            } else {
+                setSuggestion('');
+            }
+        } else {
+            setSuggestion('');
+        }
+    }, [input, settings.coloredKeywords]);
+
     const handleAdd = () => {
         if (!input.trim()) return;
         onAdd(input);
         setInput('');
+        setSuggestion('');
+    };
+
+    const acceptSuggestion = () => {
+        if (suggestion) {
+            setInput(input + suggestion);
+            setSuggestion('');
+            inputRef.current?.focus();
+        }
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+        if (e.key === 'Tab' && suggestion) {
+            e.preventDefault();
+            acceptSuggestion();
+        } else if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleAdd();
+        } else if (e.key === 'Escape') {
+            setSuggestion('');
         }
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        // Convert to lowercase
+        setInput(e.target.value.toLowerCase());
+    };
+
+    const getKeywordDisplay = () => {
+        for (const keyword of settings.coloredKeywords) {
+            if (input.toLowerCase().startsWith(`${keyword}:`)) {
+                const defaultKeywords = ['todo', 'idea', 'listen', 'read'];
+                const isDefault = defaultKeywords.includes(keyword);
+                const displayText = keyword.charAt(0).toUpperCase() + keyword.slice(1);
+
+                if (isDefault) {
+                    return (
+                        <span className={getKeywordColor(keyword, isDark)}>
+                            {displayText}
+                        </span>
+                    );
+                } else {
+                    return (
+                        <span style={{ color: generateColorForKeyword(keyword, isDark) }}>
+                            {displayText}
+                        </span>
+                    );
+                }
+            }
+        }
+        return null;
     };
 
     if (!isOpen) return null;
@@ -50,24 +111,61 @@ export const AddNoteModal = ({ isOpen, onClose, onAdd, theme, settings, isDark }
                         <X className="w-5 h-5" />
                     </button>
                 </div>
-                <textarea
-                    ref={inputRef}
-                    autoFocus
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Capture a thought..."
-                    className={`w-full bg-transparent text-lg ${theme.text} placeholder:${theme.textMuted}/50 
-                      outline-none resize-none leading-relaxed h-32 mb-4`}
-                />
-                <div className={`flex justify-between items-center ${theme.border} border-t pt-4`}>
-                    <div className="text-xs font-medium pl-1">
-                        {settings.coloredKeywords.map(keyword => {
-                            if (input.toLowerCase().startsWith(`${keyword}:`)) {
-                                return <span key={keyword} className={getKeywordColor(keyword, isDark)}>{keyword.charAt(0).toUpperCase() + keyword.slice(1)}</span>;
-                            }
-                            return null;
-                        })}
+
+                {/* Input with Ghost Text Overlay */}
+                <div className="relative mb-3">
+                    <div className="relative">
+                        {/* Combined text layer for proper alignment */}
+                        <div
+                            className="absolute inset-0 text-lg leading-relaxed whitespace-pre-wrap break-words pointer-events-none"
+                            style={{
+                                fontFamily: 'inherit',
+                                padding: '0',
+                                margin: '0',
+                                letterSpacing: 'inherit',
+                                wordSpacing: 'inherit',
+                            }}
+                        >
+                            <span className="invisible">{input}</span>
+                            <span className={`${theme.textMuted} opacity-40`}>{suggestion}</span>
+                        </div>
+
+                        {/* Actual input */}
+                        <textarea
+                            ref={inputRef}
+                            autoFocus
+                            value={input}
+                            onChange={handleInputChange}
+                            onKeyDown={handleKeyDown}
+                            placeholder="capture a thought..."
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            spellCheck={false}
+                            className={`w-full bg-transparent text-lg ${theme.text} placeholder:${theme.textMuted}/50 
+                          outline-none resize-none leading-relaxed h-32 relative z-10`}
+                            style={{
+                                caretColor: isDark ? '#e8e2d9' : '#2d2a26',
+                            }}
+                        />
+                    </div>
+
+                    {/* Mobile: Tap to accept suggestion button */}
+                    {suggestion && (
+                        <button
+                            onClick={acceptSuggestion}
+                            className={`absolute -bottom-2 right-0 ${theme.bgSecondary} ${theme.text} px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-md hover:opacity-80 transition-opacity z-20`}
+                        >
+                            <CornerDownLeft className="w-3 h-3" />
+                            Accept
+                        </button>
+                    )}
+                </div>
+
+                <div className={`flex justify-between items-center ${theme.border} border-t pt-4 mt-6`}>
+                    <div className="flex items-center gap-2">
+                        <div className="text-xs font-medium">
+                            {getKeywordDisplay()}
+                        </div>
                     </div>
                     <button
                         onClick={handleAdd}
@@ -79,7 +177,7 @@ export const AddNoteModal = ({ isOpen, onClose, onAdd, theme, settings, isDark }
                     </button>
                 </div>
                 <p className={`text-xs ${theme.textMuted} mt-2 text-center`}>
-                    Press Enter to add • Shift+Enter for new line
+                    {suggestion ? 'Tab to complete • Tap button to accept' : 'enter to add • shift+enter for new line'}
                 </p>
             </div>
         </div>

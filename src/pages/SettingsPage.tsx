@@ -48,14 +48,22 @@ export const SettingsPage = ({
     };
 
     const getColorStyle = (keyword: string) => {
-        // For default keywords, use getKeywordColor
         const defaultKeywords = ['todo', 'idea', 'listen', 'read'];
         if (defaultKeywords.includes(keyword)) {
             return {};
         }
-        // For custom keywords, generate and apply color
-        const color = generateColorForKeyword(keyword, isDark);
-        return { color };
+        return { backgroundColor: generateColorForKeyword(keyword, isDark) + '20', color: generateColorForKeyword(keyword, isDark) };
+    };
+
+    const getColorClass = (keyword: string) => {
+        const defaultKeywords = ['todo', 'idea', 'listen', 'read'];
+        if (!defaultKeywords.includes(keyword)) return '';
+
+        if (keyword === 'todo') return isDark ? 'bg-[#E89B6A]/20 text-[#E89B6A]' : 'bg-[#C27A45]/20 text-[#C27A45]';
+        if (keyword === 'idea') return isDark ? 'bg-[#7FA87F]/20 text-[#7FA87F]' : 'bg-[#5A7D5A]/20 text-[#5A7D5A]';
+        if (keyword === 'listen') return isDark ? 'bg-[#B39A85]/20 text-[#B39A85]' : 'bg-[#8C7A6B]/20 text-[#8C7A6B]';
+        if (keyword === 'read') return isDark ? 'bg-[#8E8EBD]/20 text-[#8E8EBD]' : 'bg-[#6B6B99]/20 text-[#6B6B99]';
+        return '';
     };
 
     return (
@@ -141,26 +149,27 @@ export const SettingsPage = ({
                 </div>
             </div>
 
-            {/* Colored Keywords */}
+            {/* Colored Keywords - Pill Style */}
             <div className="mb-6">
                 <h4 className={`text-sm font-semibold ${theme.text} mb-3`}>Colored Keywords</h4>
                 <div className={`${theme.bgSecondary} rounded-xl p-4 mb-3`}>
-                    {settings.coloredKeywords.map(keyword => (
-                        <div key={keyword} className="flex items-center justify-between mb-3 last:mb-0">
+                    <div className="flex flex-wrap gap-2">
+                        {settings.coloredKeywords.map(keyword => (
                             <span
-                                className={`text-sm font-medium ${getKeywordColor(keyword, isDark)}`}
+                                key={keyword}
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${getColorClass(keyword)}`}
                                 style={getColorStyle(keyword)}
                             >
                                 {keyword}:
+                                <button
+                                    onClick={() => removeKeyword(keyword)}
+                                    className="hover:opacity-70 transition-opacity"
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
                             </span>
-                            <button
-                                onClick={() => removeKeyword(keyword)}
-                                className={`${theme.textMuted} hover:text-red-400 transition-colors p-1`}
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
                 <div className="flex gap-2">
                     <input

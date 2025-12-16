@@ -30,25 +30,28 @@ export const HomePage = ({
     const filteredAndSortedNotes = useMemo(() => {
         let filtered = notes;
 
-        // Filter by search query
         if (searchQuery) {
             filtered = notes.filter(n => n.content.toLowerCase().includes(searchQuery.toLowerCase()));
         }
 
-        // Sort based on settings
         const sorted = [...filtered].sort((a, b) => {
+            let timeA, timeB;
+
             if (settings.sortBy === 'updated') {
-                const timeA = a.updatedAt || a.createdAt;
-                const timeB = b.updatedAt || b.createdAt;
-                return timeB - timeA;
+                timeA = a.updatedAt || a.createdAt;
+                timeB = b.updatedAt || b.createdAt;
             } else {
-                // Default: sort by created
-                return b.createdAt - a.createdAt;
+                timeA = a.createdAt;
+                timeB = b.createdAt;
             }
+
+            // Apply sort order
+            return settings.sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
         });
 
         return sorted;
-    }, [notes, searchQuery, settings.sortBy]);
+    }, [notes, searchQuery, settings.sortBy, settings.sortOrder]);
+
 
     const handleAddNote = (content: string) => {
         onAdd(content);
@@ -61,6 +64,7 @@ export const HomePage = ({
                 notes={filteredAndSortedNotes}
                 onUpdate={onUpdate}
                 onDelete={onDelete}
+                onAdd={onAdd}
                 theme={theme}
                 isDark={isDark}
                 settings={settings}

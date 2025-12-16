@@ -10,7 +10,8 @@ export interface SettingsConfig {
     syncLocation: 'local' | 'cloud';
     coloredKeywords: string[];
     showFullText: boolean;
-    sortBy: 'created' | 'updated'; // Add this
+    sortBy: 'created' | 'updated';
+    sortOrder: 'asc' | 'desc'; // Add this
 }
 
 export interface Theme {

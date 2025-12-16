@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Download, Upload, X } from 'lucide-react';
 import type { Theme, SettingsConfig } from '../types';
-import { getKeywordColor, generateColorForKeyword } from '../utils/helpers';
+import { generateColorForKeyword } from '../utils/helpers';
 
 interface SettingsPageProps {
     settings: SettingsConfig;
@@ -71,14 +71,34 @@ export const SettingsPage = ({
             {/* Note Sorting */}
             <div className="mb-6">
                 <h4 className={`text-sm font-semibold ${theme.text} mb-3`}>Note Sorting</h4>
-                <select
-                    value={settings.sortBy}
-                    onChange={(e) => setSettings(prev => ({ ...prev, sortBy: e.target.value as 'created' | 'updated' }))}
-                    className={`w-full ${theme.bgSecondary} rounded-xl py-3 px-4 ${theme.text} text-sm outline-none cursor-pointer`}
-                >
-                    <option value="created">Created Time (Newest First)</option>
-                    <option value="updated">Last Updated (Most Recent First)</option>
-                </select>
+
+                <div className="flex gap-3">
+                    {/* Sort By - 60% */}
+                    <div className="flex-[6]">
+                        <label className={`text-xs ${theme.textMuted} block mb-2`}>Sort By</label>
+                        <select
+                            value={settings.sortBy}
+                            onChange={(e) => setSettings(prev => ({ ...prev, sortBy: e.target.value as 'created' | 'updated' }))}
+                            className={`w-full ${theme.bgSecondary} rounded-xl py-3 px-4 ${theme.text} text-sm outline-none cursor-pointer`}
+                        >
+                            <option value="created">Created Time</option>
+                            <option value="updated">Last Updated</option>
+                        </select>
+                    </div>
+
+                    {/* Order - 40% */}
+                    <div className="flex-[4]">
+                        <label className={`text-xs ${theme.textMuted} block mb-2`}>Order</label>
+                        <select
+                            value={settings.sortOrder}
+                            onChange={(e) => setSettings(prev => ({ ...prev, sortOrder: e.target.value as 'asc' | 'desc' }))}
+                            className={`w-full ${theme.bgSecondary} rounded-xl py-3 px-4 ${theme.text} text-sm outline-none cursor-pointer`}
+                        >
+                            <option value="desc">Newest</option>
+                            <option value="asc">Oldest</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             {/* Storage & Sync */}
@@ -103,62 +123,6 @@ export const SettingsPage = ({
                             className="w-4 h-4"
                         />
                     </label>
-                </div>
-            </div>
-
-            {/* Export/Import Notes */}
-            <div className="mb-6">
-                <h4 className={`text-sm font-semibold ${theme.text} mb-3`}>Notes Backup</h4>
-                <div className="flex gap-3">
-                    <button
-                        onClick={onExport}
-                        className={`flex-1 ${theme.bgSecondary} hover:${theme.accent} hover:${theme.accentText} px-4 py-3 rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-2`}
-                    >
-                        <Download className="w-4 h-4" />
-                        Export Notes
-                    </button>
-                    <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className={`flex-1 ${theme.bgSecondary} hover:${theme.accent} hover:${theme.accentText} px-4 py-3 rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-2`}
-                    >
-                        <Upload className="w-4 h-4" />
-                        Import Notes
-                    </button>
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".json"
-                        onChange={handleImport}
-                        className="hidden"
-                    />
-                </div>
-            </div>
-
-            {/* Export/Import Settings */}
-            <div className="mb-6">
-                <h4 className={`text-sm font-semibold ${theme.text} mb-3`}>Settings Backup</h4>
-                <div className="flex gap-3">
-                    <button
-                        onClick={onExportSettings}
-                        className={`flex-1 ${theme.bgSecondary} hover:${theme.accent} hover:${theme.accentText} px-4 py-3 rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-2`}
-                    >
-                        <Download className="w-4 h-4" />
-                        Export Settings
-                    </button>
-                    <button
-                        onClick={() => settingsFileInputRef.current?.click()}
-                        className={`flex-1 ${theme.bgSecondary} hover:${theme.accent} hover:${theme.accentText} px-4 py-3 rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-2`}
-                    >
-                        <Upload className="w-4 h-4" />
-                        Import Settings
-                    </button>
-                    <input
-                        ref={settingsFileInputRef}
-                        type="file"
-                        accept=".json"
-                        onChange={handleImportSettings}
-                        className="hidden"
-                    />
                 </div>
             </div>
 
@@ -216,6 +180,62 @@ export const SettingsPage = ({
                         className="w-5 h-5"
                     />
                 </label>
+            </div>
+
+            {/* Export/Import Notes */}
+            <div className="mb-6">
+                <h4 className={`text-sm font-semibold ${theme.text} mb-3`}>Notes Backup</h4>
+                <div className="flex gap-3">
+                    <button
+                        onClick={onExport}
+                        className={`flex-1 ${theme.bgSecondary} hover:${theme.accent} hover:${theme.accentText} px-4 py-3 rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-2`}
+                    >
+                        <Download className="w-4 h-4" />
+                        Export Notes
+                    </button>
+                    <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className={`flex-1 ${theme.bgSecondary} hover:${theme.accent} hover:${theme.accentText} px-4 py-3 rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-2`}
+                    >
+                        <Upload className="w-4 h-4" />
+                        Import Notes
+                    </button>
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".json"
+                        onChange={handleImport}
+                        className="hidden"
+                    />
+                </div>
+            </div>
+
+            {/* Export/Import Settings */}
+            <div className="mb-6">
+                <h4 className={`text-sm font-semibold ${theme.text} mb-3`}>Settings Backup</h4>
+                <div className="flex gap-3">
+                    <button
+                        onClick={onExportSettings}
+                        className={`flex-1 ${theme.bgSecondary} hover:${theme.accent} hover:${theme.accentText} px-4 py-3 rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-2`}
+                    >
+                        <Download className="w-4 h-4" />
+                        Export Settings
+                    </button>
+                    <button
+                        onClick={() => settingsFileInputRef.current?.click()}
+                        className={`flex-1 ${theme.bgSecondary} hover:${theme.accent} hover:${theme.accentText} px-4 py-3 rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-2`}
+                    >
+                        <Upload className="w-4 h-4" />
+                        Import Settings
+                    </button>
+                    <input
+                        ref={settingsFileInputRef}
+                        type="file"
+                        accept=".json"
+                        onChange={handleImportSettings}
+                        className="hidden"
+                    />
+                </div>
             </div>
         </div>
     );

@@ -31,6 +31,7 @@ export const NotesList = ({ notes, onUpdate, onDelete, theme, isDark, settings }
                         theme={theme}
                         isDark={isDark}
                         showFullText={settings.showFullText}
+                        keywords={settings.coloredKeywords} // Pass keywords
                     />
                 );
             })}

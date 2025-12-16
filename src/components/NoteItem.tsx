@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { Check, Trash2 } from 'lucide-react';
-import type { Note, Theme } from '../types';
+import type { Note, Theme, SettingsConfig } from '../types';
 import { formatTime, getKeywordColor, generateColorForKeyword } from '../utils/helpers';
 
 interface NoteItemProps {
@@ -13,6 +13,7 @@ interface NoteItemProps {
     theme: Theme;
     isDark: boolean;
     showFullText: boolean;
+    keywords: string[]; // Add this prop
 }
 
 export const NoteItem = ({
@@ -25,6 +26,7 @@ export const NoteItem = ({
     theme,
     isDark,
     showFullText,
+    keywords, // Receive keywords from settings
 }: NoteItemProps) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -62,15 +64,23 @@ export const NoteItem = ({
         return ''; // Use inline style instead
     };
 
+    // Check if a keyword is registered
+    const isRegisteredKeyword = (word: string) => {
+        return keywords.some(kw => kw.toLowerCase() === word.toLowerCase());
+    };
+
     const renderFullText = () => {
         const lines = note.content.split('\n');
 
         return (
             <div className="whitespace-pre-wrap">
                 {lines.map((line, idx) => {
-                    const parts = line.split(/^([\w]+:)/i);
+                    // Create regex pattern from registered keywords
+                    const keywordPattern = keywords.map(kw => kw.toLowerCase()).join('|');
+                    const regex = new RegExp(`^(${keywordPattern}):`, 'i');
+                    const parts = line.split(regex);
 
-                    if (parts.length > 1 && parts[1]) {
+                    if (parts.length > 1 && parts[1] && isRegisteredKeyword(parts[1].replace(':', ''))) {
                         const tag = parts[1].toLowerCase().replace(':', '');
                         const colorClass = getKeywordClass(tag);
                         const colorStyle = getKeywordStyle(tag);
@@ -81,7 +91,7 @@ export const NoteItem = ({
                                     className={`${colorClass} font-bold`}
                                     style={colorStyle}
                                 >
-                                    {parts[1]}
+                                    {parts[1]}:
                                 </span>
                                 <span className={theme.text}>{parts[2]}</span>
                             </div>
@@ -103,10 +113,13 @@ export const NoteItem = ({
         const firstLine = lines[0];
         const hasMore = lines.length > 1 || firstLine.length > 50;
 
-        const parts = firstLine.split(/^([\w]+:)/i);
+        // Create regex pattern from registered keywords
+        const keywordPattern = keywords.map(kw => kw.toLowerCase()).join('|');
+        const regex = new RegExp(`^(${keywordPattern}):`, 'i');
+        const parts = firstLine.split(regex);
         let contentNode;
 
-        if (parts.length > 1 && parts[1]) {
+        if (parts.length > 1 && parts[1] && isRegisteredKeyword(parts[1].replace(':', ''))) {
             const tag = parts[1].toLowerCase().replace(':', '');
             const colorClass = getKeywordClass(tag);
             const colorStyle = getKeywordStyle(tag);
@@ -117,7 +130,7 @@ export const NoteItem = ({
                         className={`${colorClass} font-bold mr-1`}
                         style={colorStyle}
                     >
-                        {parts[1]}
+                        {parts[1]}:
                     </span>
                     <span className={theme.text}>{parts[2]}</span>
                 </div>

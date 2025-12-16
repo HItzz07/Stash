@@ -8,6 +8,7 @@ export const useSettings = () => {
             syncLocation: 'local',
             coloredKeywords: ['todo', 'idea', 'listen', 'read'],
             showFullText: false,
+            sortBy: 'created', // Default to created
         };
     });
 

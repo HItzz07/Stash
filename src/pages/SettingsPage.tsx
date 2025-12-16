@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Download, Upload, X } from 'lucide-react';
 import type { Theme, SettingsConfig } from '../types';
-import { generateColorForKeyword } from '../utils/helpers';
+import { getKeywordColor, generateColorForKeyword } from '../utils/helpers';
 
 interface SettingsPageProps {
     settings: SettingsConfig;
@@ -68,7 +68,20 @@ export const SettingsPage = ({
 
     return (
         <div className="flex-1 overflow-y-auto px-6 pt-4 pb-8">
-            {/* Sync Location */}
+            {/* Note Sorting */}
+            <div className="mb-6">
+                <h4 className={`text-sm font-semibold ${theme.text} mb-3`}>Note Sorting</h4>
+                <select
+                    value={settings.sortBy}
+                    onChange={(e) => setSettings(prev => ({ ...prev, sortBy: e.target.value as 'created' | 'updated' }))}
+                    className={`w-full ${theme.bgSecondary} rounded-xl py-3 px-4 ${theme.text} text-sm outline-none cursor-pointer`}
+                >
+                    <option value="created">Created Time (Newest First)</option>
+                    <option value="updated">Last Updated (Most Recent First)</option>
+                </select>
+            </div>
+
+            {/* Storage & Sync */}
             <div className="mb-6">
                 <h4 className={`text-sm font-semibold ${theme.text} mb-3`}>Storage & Sync</h4>
                 <div className={`${theme.bgSecondary} rounded-xl p-4`}>

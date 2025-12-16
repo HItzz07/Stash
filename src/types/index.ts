@@ -9,7 +9,8 @@ export interface Note {
 export interface SettingsConfig {
     syncLocation: 'local' | 'cloud';
     coloredKeywords: string[];
-    showFullText: boolean;  // Changed from defaultExpandMode
+    showFullText: boolean;
+    sortBy: 'created' | 'updated'; // Add this
 }
 
 export interface Theme {

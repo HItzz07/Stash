@@ -6,8 +6,8 @@ export const useNotes = () => {
     const [notes, setNotes] = useState<Note[]>(() => {
         const saved = localStorage.getItem('stash-notes');
         return saved ? JSON.parse(saved) : [
-            { id: '1', content: 'todo: call insurance about claim\n- Ask about dental coverage\n- Confirm deductible', category: 'todo', createdAt: Date.now() },
-            { id: '2', content: 'listen: Podcast Freakonomics ep latest', category: 'listen', createdAt: Date.now() - 3600000 },
+            { id: '1', content: 'todo: call insurance about claim\n- ask about dental coverage\n- confirm deductible', category: 'todo', createdAt: Date.now() },
+            { id: '2', content: 'listen: podcast freakonomics ep latest', category: 'listen', createdAt: Date.now() - 3600000 },
         ];
     });
 
@@ -26,21 +26,14 @@ export const useNotes = () => {
     };
 
     const updateNote = (id: string, newContent: string) => {
-        setNotes(prev => {
-            const updated = prev.map(n =>
-                n.id === id ? {
-                    ...n,
-                    content: newContent,
-                    category: detectCategory(newContent),
-                    updatedAt: Date.now()
-                } : n
-            );
-            return updated.sort((a, b) => {
-                const timeA = a.updatedAt || a.createdAt;
-                const timeB = b.updatedAt || b.createdAt;
-                return timeB - timeA;
-            });
-        });
+        setNotes(prev => prev.map(n =>
+            n.id === id ? {
+                ...n,
+                content: newContent,
+                category: detectCategory(newContent),
+                updatedAt: Date.now()
+            } : n
+        ));
     };
 
     const deleteNote = (id: string) => {

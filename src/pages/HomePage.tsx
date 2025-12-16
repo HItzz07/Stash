@@ -27,10 +27,28 @@ export const HomePage = ({
 }: HomePageProps) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const filteredNotes = useMemo(() => {
-        if (!searchQuery) return notes;
-        return notes.filter(n => n.content.toLowerCase().includes(searchQuery.toLowerCase()));
-    }, [notes, searchQuery]);
+    const filteredAndSortedNotes = useMemo(() => {
+        let filtered = notes;
+
+        // Filter by search query
+        if (searchQuery) {
+            filtered = notes.filter(n => n.content.toLowerCase().includes(searchQuery.toLowerCase()));
+        }
+
+        // Sort based on settings
+        const sorted = [...filtered].sort((a, b) => {
+            if (settings.sortBy === 'updated') {
+                const timeA = a.updatedAt || a.createdAt;
+                const timeB = b.updatedAt || b.createdAt;
+                return timeB - timeA;
+            } else {
+                // Default: sort by created
+                return b.createdAt - a.createdAt;
+            }
+        });
+
+        return sorted;
+    }, [notes, searchQuery, settings.sortBy]);
 
     const handleAddNote = (content: string) => {
         onAdd(content);
@@ -40,7 +58,7 @@ export const HomePage = ({
     return (
         <>
             <NotesList
-                notes={filteredNotes}
+                notes={filteredAndSortedNotes}
                 onUpdate={onUpdate}
                 onDelete={onDelete}
                 theme={theme}

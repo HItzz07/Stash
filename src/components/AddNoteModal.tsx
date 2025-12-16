@@ -15,7 +15,22 @@ interface AddNoteModalProps {
 export const AddNoteModal = ({ isOpen, onClose, onAdd, theme, settings, isDark }: AddNoteModalProps) => {
     const [input, setInput] = useState('');
     const [suggestion, setSuggestion] = useState('');
+    const [isMobile, setIsMobile] = useState(false);
     const inputRef = useRef<HTMLTextAreaElement>(null);
+
+    useEffect(() => {
+        // Detect if mobile device
+        const checkMobile = () => {
+            const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+                || window.innerWidth <= 768
+                || ('ontouchstart' in window);
+            setIsMobile(mobile);
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     useEffect(() => {
         if (isOpen && inputRef.current) {
@@ -58,7 +73,8 @@ export const AddNoteModal = ({ isOpen, onClose, onAdd, theme, settings, isDark }
         if (e.key === 'Tab' && suggestion) {
             e.preventDefault();
             acceptSuggestion();
-        } else if (e.key === 'Enter' && !e.shiftKey) {
+        } else if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
+            // Only submit on Enter for desktop users
             e.preventDefault();
             handleAdd();
         } else if (e.key === 'Escape') {
@@ -68,7 +84,7 @@ export const AddNoteModal = ({ isOpen, onClose, onAdd, theme, settings, isDark }
 
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         // Convert to lowercase
-        setInput(e.target.value);
+        setInput(e.target.value.toLowerCase());
     };
 
     const getKeywordDisplay = () => {
@@ -156,7 +172,7 @@ export const AddNoteModal = ({ isOpen, onClose, onAdd, theme, settings, isDark }
                             className={`absolute -bottom-2 right-0 ${theme.bgSecondary} ${theme.text} px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-md hover:opacity-80 transition-opacity z-20`}
                         >
                             <CornerDownLeft className="w-3 h-3" />
-                            Accept
+                            accept
                         </button>
                     )}
                 </div>
@@ -177,7 +193,10 @@ export const AddNoteModal = ({ isOpen, onClose, onAdd, theme, settings, isDark }
                     </button>
                 </div>
                 <p className={`text-xs ${theme.textMuted} mt-2 text-center`}>
-                    {suggestion ? 'Tab to complete • Tap button to accept' : 'enter to add • shift+enter for new line'}
+                    {isMobile
+                        ? (suggestion ? 'tap accept button to complete' : 'tap button to add note')
+                        : (suggestion ? 'tab to complete • enter to add' : 'enter to add • shift+enter for new line')
+                    }
                 </p>
             </div>
         </div>

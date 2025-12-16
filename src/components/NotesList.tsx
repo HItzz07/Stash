@@ -15,7 +15,7 @@ export const NotesList = ({ notes, onUpdate, onDelete, theme, isDark, settings }
     const [expandedNoteId, setExpandedNoteId] = useState<string | null>(null);
 
     return (
-        <div className="flex-1 overflow-y-auto px-6 pt-4 pb-24 scrollbar-hide">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 pt-4 pb-24 scrollbar-hide">
             {notes.map((note) => {
                 const isExpanded = expandedNoteId === note.id;
 
@@ -31,7 +31,7 @@ export const NotesList = ({ notes, onUpdate, onDelete, theme, isDark, settings }
                         theme={theme}
                         isDark={isDark}
                         showFullText={settings.showFullText}
-                        keywords={settings.coloredKeywords} // Pass keywords
+                        keywords={settings.coloredKeywords}
                     />
                 );
             })}

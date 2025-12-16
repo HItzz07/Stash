@@ -21,7 +21,7 @@ function App() {
   return (
     <BrowserRouter>
       <div className={`h-screen w-full ${theme.bg} flex justify-center font-sans ${theme.text} overflow-hidden`}>
-        <div className={`w-full max-w-[430px] h-full flex flex-col relative ${theme.bg} shadow-2xl`}>
+        <div className={`w-full max-w-[430px] h-full flex flex-col relative ${theme.bg} shadow-2xl overflow-hidden`}>
 
           <Header
             isSearchMode={isSearchMode}

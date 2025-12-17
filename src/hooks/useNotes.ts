@@ -1,68 +1,63 @@
-import { useState, useEffect } from 'react';
-import type { Note } from '../types';
-import { detectCategory, generateUUID } from '../utils/helpers';
+import { useEffect, useState } from 'react'
+import * as repo from '../db/notesRepository'
+import { migrateFromLocalStorage } from '../db/migrate'
+import { dbPromise } from '../db/db'
 
-export const useNotes = () => {
-    const [notes, setNotes] = useState<Note[]>(() => {
-        const saved = localStorage.getItem('stash-notes');
-        return saved ? JSON.parse(saved) : [
-            { id: '1', content: 'todo: call insurance about claim\n- ask about dental coverage\n- confirm deductible', category: 'todo', createdAt: Date.now() },
-            { id: '2', content: 'listen: podcast freakonomics ep latest', category: 'listen', createdAt: Date.now() - 3600000 },
-        ];
-    });
+export function useNotes() {
+    const [notes, setNotes] = useState<any[]>([])
 
     useEffect(() => {
-        localStorage.setItem('stash-notes', JSON.stringify(notes));
-    }, [notes]);
+        (async () => {
+            await migrateFromLocalStorage()
+            const all = await repo.getAllNotes()
+            setNotes(all)
+        })()
+    }, [])
 
-    const addNote = (content: string) => {
-        const newNote: Note = {
-            id: generateUUID(),
-            content,
-            category: detectCategory(content),
-            createdAt: Date.now(),
-        };
-        setNotes([newNote, ...notes]);
-    };
+    const addNote = async (content: string) => {
+        const note = await repo.addNote(content)
+        setNotes(prev => [note, ...prev])
+    }
 
-    const updateNote = (id: string, newContent: string) => {
-        setNotes(prev => prev.map(n =>
-            n.id === id ? {
-                ...n,
-                content: newContent,
-                category: detectCategory(newContent),
-                updatedAt: Date.now()
-            } : n
-        ));
-    };
+    const updateNote = async (id: string, content: string) => {
+        await repo.updateNote(id, content)
+        setNotes(prev =>
+            prev.map(n =>
+                n.id === id ? { ...n, content, updatedAt: Date.now() } : n
+            )
+        )
+    }
 
-    const deleteNote = (id: string) => {
-        setNotes(prev => prev.filter(n => n.id !== id));
-    };
+    const deleteNote = async (id: string) => {
+        await repo.deleteNote(id)
+        setNotes(prev => prev.filter(n => n.id !== id))
+    }
 
-    const exportNotes = () => {
-        const dataStr = JSON.stringify(notes, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(dataBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `stash-notes-${Date.now()}.json`;
-        link.click();
-        URL.revokeObjectURL(url);
-    };
+    const importNotes = async (file: File) => {
+        const text = await file.text()
+        const parsed = JSON.parse(text)
 
-    const importNotes = (file: File) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const imported = JSON.parse(e.target?.result as string);
-                setNotes(imported);
-            } catch (error) {
-                alert('Invalid JSON file');
-            }
-        };
-        reader.readAsText(file);
-    };
+        if (!Array.isArray(parsed.notes)) {
+            throw new Error('Invalid notes backup file')
+        }
 
-    return { notes, addNote, updateNote, deleteNote, exportNotes, importNotes };
-};
+        const db = await dbPromise
+
+        // overwrite DB
+        await db.clear('notes')
+        for (const note of parsed.notes) {
+            await db.put('notes', note)
+        }
+
+        // 🔥 update UI immediately
+        setNotes(parsed.notes)
+    }
+
+    return {
+        notes,
+        addNote,
+        updateNote,
+        deleteNote,
+        importNotes,
+    }
+}

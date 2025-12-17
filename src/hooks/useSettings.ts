@@ -1,60 +1,74 @@
-import { useState, useEffect } from 'react';
-import type { SettingsConfig } from '../types';
+import { useEffect, useState } from 'react'
+import { getSettings, saveSettings } from '../db/settingsRepository'
+import { migrateSettingsFromLocalStorage } from '../db/migrateSettings'
+import type { SettingsConfig } from '../types'
 
-export const useSettings = () => {
-    const [settings, setSettings] = useState<SettingsConfig>(() => {
-        const saved = localStorage.getItem('stash-settings');
-        return saved ? JSON.parse(saved) : {
-            syncLocation: 'local',
-            coloredKeywords: ['todo', 'idea', 'listen', 'read'],
-            showFullText: false,
-            sortBy: 'created',
-            sortOrder: 'desc',
-        };
-    });
+const DEFAULT_SETTINGS: SettingsConfig = {
+    sortBy: 'created',
+    sortOrder: 'desc',
+    showFullText: false,
+    coloredKeywords: ['todo', 'idea', 'read', 'listen'],
+    syncLocation: 'local',
+}
+
+export function useSettings() {
+    const [settings, setSettingsState] = useState(DEFAULT_SETTINGS)
 
     useEffect(() => {
-        localStorage.setItem('stash-settings', JSON.stringify(settings));
-    }, [settings]);
+        (async () => {
+            await migrateSettingsFromLocalStorage()
+            const stored = await getSettings()
+            if (stored?.data) {
+                setSettingsState({ ...DEFAULT_SETTINGS, ...stored.data })
+            }
+        })()
+    }, [])
+
+    const setSettings = (value: any) => {
+        setSettingsState(prev => {
+            const next =
+                typeof value === 'function' ? value(prev) : value
+
+            saveSettings(next)
+            return next
+        })
+    }
 
     const addKeyword = (keyword: string) => {
-        if (!keyword.trim() || settings.coloredKeywords.includes(keyword.toLowerCase())) return;
-        setSettings(prev => ({
+        setSettings((prev: any) => ({
             ...prev,
-            coloredKeywords: [...prev.coloredKeywords, keyword.toLowerCase()]
-        }));
-    };
+            coloredKeywords: [...prev.coloredKeywords, keyword],
+        }))
+    }
 
     const removeKeyword = (keyword: string) => {
-        setSettings(prev => ({
+        setSettings((prev: any) => ({
             ...prev,
-            coloredKeywords: prev.coloredKeywords.filter(k => k !== keyword)
-        }));
-    };
+            coloredKeywords: prev.coloredKeywords.filter(
+                (k: string) => k !== keyword
+            ),
+        }))
+    }
 
-    const exportSettings = () => {
-        const dataStr = JSON.stringify(settings, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(dataBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `stash-settings-${Date.now()}.json`;
-        link.click();
-        URL.revokeObjectURL(url);
-    };
+    const importSettings = async (file: File) => {
+        const text = await file.text()
+        const parsed = JSON.parse(text)
 
-    const importSettings = (file: File) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const imported = JSON.parse(e.target?.result as string);
-                setSettings(imported);
-            } catch (error) {
-                alert('Invalid settings file');
-            }
-        };
-        reader.readAsText(file);
-    };
+        if (!parsed.settings || typeof parsed.settings !== 'object') {
+            throw new Error('Invalid settings backup file')
+        }
 
-    return { settings, setSettings, addKeyword, removeKeyword, exportSettings, importSettings };
-};
+        await saveSettings(parsed.settings)
+
+        // 🔥 instant UI update
+        setSettingsState(parsed.settings)
+    }
+
+    return {
+        settings,
+        setSettings,
+        addKeyword,
+        removeKeyword,
+        importSettings,
+    }
+}

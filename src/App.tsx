@@ -7,10 +7,16 @@ import { useNotes } from './hooks/useNotes';
 import { useSettings } from './hooks/useSettings';
 import { useTheme } from './hooks/useTheme';
 import { getTheme } from './utils/theme';
+import { exportNotesAsJSON } from './utils/exportNotes'
+import { importNotesFromJSON } from './utils/importNotes'
+import { exportSettingsAsJSON } from './utils/exportSettings'
+import { importSettingsFromJSON } from './utils/importSettings'
+
 
 function App() {
-  const { notes, addNote, updateNote, deleteNote, exportNotes, importNotes } = useNotes();
-  const { settings, setSettings, addKeyword, removeKeyword, exportSettings, importSettings } = useSettings();
+  const { notes, addNote, updateNote, deleteNote, importNotes } = useNotes()
+  const { settings, setSettings, addKeyword, removeKeyword, importSettings } = useSettings()
+
   const { isDark, setIsDark } = useTheme();
 
   const [isSearchMode, setIsSearchMode] = useState(false);
@@ -58,9 +64,9 @@ function App() {
                   setSettings={setSettings}
                   addKeyword={addKeyword}
                   removeKeyword={removeKeyword}
-                  onExport={exportNotes}
+                  onExport={exportNotesAsJSON}
                   onImport={importNotes}
-                  onExportSettings={exportSettings}
+                  onExportSettings={exportSettingsAsJSON}
                   onImportSettings={importSettings}
                   theme={theme}
                   isDark={isDark}

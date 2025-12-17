@@ -7,39 +7,61 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+
     VitePWA({
+      strategies: 'generateSW',
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+
+      includeAssets: [
+        'favicon.ico',
+        'apple-touch-icon.png',
+        'pwa-192x192.png',
+        'pwa-512x512.png',
+      ],
+
       manifest: {
-        name: 'Stash Notes',
+        name: 'Stash',
         short_name: 'Stash',
-        description: 'Minimalist capture & forget notes app',
-        theme_color: '#fbf9f6',
-        background_color: '#fbf9f6',
+        description: 'Offline-first notes',
+        start_url: '/',
+        scope: '/',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/',
-        start_url: '/',
-        icons: [
+        background_color: '#fbf9f6',
+        theme_color: '#fbf9f6',
+      },
+
+      workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+
+        // 🔥 CRITICAL FOR REACT ROUTER OFFLINE
+        navigateFallback: '/',
+
+        runtimeCaching: [
           {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
+            // HTML / navigation
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'pages',
+            },
           },
           {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
+            // JS / CSS / Fonts / Icons
+            urlPattern: /\.(?:js|css|woff2|png|svg)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'assets',
+              expiration: {
+                maxEntries: 100,
+              },
+            },
           },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable'
-          }
-        ]
-      }
-    })
+        ],
+      },
+    }),
   ],
   // server: {
   //   host: true, // This exposes the app to your Local IP (e.g., 192.168.x.x)

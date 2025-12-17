@@ -8,10 +8,7 @@ import { useSettings } from './hooks/useSettings';
 import { useTheme } from './hooks/useTheme';
 import { getTheme } from './utils/theme';
 import { exportNotesAsJSON } from './utils/exportNotes'
-import { importNotesFromJSON } from './utils/importNotes'
 import { exportSettingsAsJSON } from './utils/exportSettings'
-import { importSettingsFromJSON } from './utils/importSettings'
-
 
 function App() {
   const { notes, addNote, updateNote, deleteNote, importNotes } = useNotes()

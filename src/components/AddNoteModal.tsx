@@ -69,23 +69,61 @@ export const AddNoteModal = ({ isOpen, onClose, onAdd, theme, settings, isDark }
         }
     };
 
+    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setInput(e.target.value)
+    }
+
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === 'Tab' && suggestion) {
-            e.preventDefault();
-            acceptSuggestion();
-        } else if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
-            // Only submit on Enter for desktop users
-            e.preventDefault();
-            handleAdd();
-        } else if (e.key === 'Escape') {
-            setSuggestion('');
+            e.preventDefault()
+            acceptSuggestion()
+            return
         }
-    };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        // Convert to lowercase
-        setInput(e.target.value.toLowerCase());
-    };
+        if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
+            e.preventDefault()
+
+            const textarea = e.currentTarget
+            const value = input
+            const cursorPos = textarea.selectionStart
+
+            const beforeCursor = value.slice(0, cursorPos)
+            const afterCursor = value.slice(cursorPos)
+
+            const lines = beforeCursor.split('\n')
+            const currentLine = lines[lines.length - 1]
+
+            // 🔥 BULLET CONTINUATION LOGIC
+            if (currentLine.startsWith('- ')) {
+                // If bullet is empty, exit bullet mode
+                if (currentLine.trim() === '-') {
+                    setInput(beforeCursor + '\n' + afterCursor)
+                    requestAnimationFrame(() => {
+                        textarea.selectionStart = textarea.selectionEnd = cursorPos + 1
+                    })
+                    return
+                }
+
+                const newText = beforeCursor + '\n- ' + afterCursor
+                const newCursorPos = cursorPos + 3
+
+                setInput(newText)
+
+                requestAnimationFrame(() => {
+                    textarea.selectionStart = textarea.selectionEnd = newCursorPos
+                })
+
+                return
+            }
+
+            // Default: submit note
+            handleAdd()
+        }
+
+        if (e.key === 'Escape') {
+            setSuggestion('')
+        }
+    }
 
     const getKeywordDisplay = () => {
         for (const keyword of settings.coloredKeywords) {

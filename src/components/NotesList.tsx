@@ -191,7 +191,7 @@ export const NotesList = ({ notes, onUpdate, onDelete, onAdd, theme, isDark, set
                 <textarea
                     ref={newNoteRef}
                     value={newNoteContent}
-                    onChange={(e) => setNewNoteContent(e.target.value.toLowerCase())}
+                    onChange={(e) => setNewNoteContent(e.target.value)}
                     onKeyDown={handleNewNoteKeyDown}
                     onBlur={saveNewNote}
                     placeholder="capture a thought..."

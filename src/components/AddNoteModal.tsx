@@ -74,15 +74,14 @@ export const AddNoteModal = ({ isOpen, onClose, onAdd, theme, settings, isDark }
     }
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Tab' && suggestion) {
+        // TAB → accept suggestion (desktop only)
+        if (e.key === 'Tab' && suggestion && !isMobile) {
             e.preventDefault()
             acceptSuggestion()
             return
         }
 
-        if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
-            e.preventDefault()
-
+        if (e.key === 'Enter') {
             const textarea = e.currentTarget
             const value = input
             const cursorPos = textarea.selectionStart
@@ -93,37 +92,45 @@ export const AddNoteModal = ({ isOpen, onClose, onAdd, theme, settings, isDark }
             const lines = beforeCursor.split('\n')
             const currentLine = lines[lines.length - 1]
 
-            // 🔥 BULLET CONTINUATION LOGIC
+            // 🔥 BULLET CONTINUATION
             if (currentLine.startsWith('- ')) {
-                // If bullet is empty, exit bullet mode
+                e.preventDefault()
+
+                // Exit bullet mode if empty bullet
                 if (currentLine.trim() === '-') {
-                    setInput(beforeCursor + '\n' + afterCursor)
+                    const newText = beforeCursor + '\n' + afterCursor
+                    setInput(newText)
+
                     requestAnimationFrame(() => {
                         textarea.selectionStart = textarea.selectionEnd = cursorPos + 1
                     })
                     return
                 }
 
+                // Continue bullet
                 const newText = beforeCursor + '\n- ' + afterCursor
-                const newCursorPos = cursorPos + 3
-
                 setInput(newText)
 
                 requestAnimationFrame(() => {
-                    textarea.selectionStart = textarea.selectionEnd = newCursorPos
+                    textarea.selectionStart = textarea.selectionEnd = cursorPos + 3
                 })
-
                 return
             }
 
-            // Default: submit note
-            handleAdd()
+            // 🖥 DESKTOP ONLY → submit note
+            if (!isMobile && !e.shiftKey) {
+                e.preventDefault()
+                handleAdd()
+            }
+
+            // 📱 MOBILE → allow normal newline (NO preventDefault)
         }
 
-        if (e.key === 'Escape') {
+        if (e.key === 'Escape' && !isMobile) {
             setSuggestion('')
         }
     }
+
 
     const getKeywordDisplay = () => {
         for (const keyword of settings.coloredKeywords) {

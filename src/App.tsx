@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // 1. Yahan useEffect add karein
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Header } from './components/Header';
 import { HomePage } from './pages/HomePage';
@@ -20,6 +20,23 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const theme = getTheme(isDark);
+
+  // 2. Is code block ko yahan paste karein (state variables ke baad aur return se pehle)
+  useEffect(() => {
+    const handler = () => {
+      document
+        .querySelectorAll('textarea')
+        .forEach(el => el.blur())
+    }
+
+    document.addEventListener('visibilitychange', handler)
+    window.addEventListener('beforeunload', handler)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handler)
+      window.removeEventListener('beforeunload', handler)
+    }
+  }, [])
 
   return (
     <BrowserRouter>

@@ -33,6 +33,8 @@ export const NoteItem = ({
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [isMobile, setIsMobile] = useState(false);
     const [localContent, setLocalContent] = useState(note.content);
+    const saveTimer = useRef<number | null>(null)
+
 
     useEffect(() => {
         const checkMobile = () => {
@@ -63,19 +65,35 @@ export const NoteItem = ({
     }, [isExpanded]);
 
     const handleTextChange = (newContent: string) => {
-        setLocalContent(newContent);
+        setLocalContent(newContent)
+
         if (textareaRef.current) {
-            textareaRef.current.style.height = 'auto';
-            textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+            textareaRef.current.style.height = 'auto'
+            textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
         }
-    };
+
+        // 🔥 AUTOSAVE (debounced)
+        if (saveTimer.current) {
+            clearTimeout(saveTimer.current)
+        }
+
+        saveTimer.current = window.setTimeout(() => {
+            if (newContent !== note.content) {
+                onUpdate(newContent) // persists to IndexedDB
+            }
+        }, 800) // ⏱ 800ms feels perfect
+    }
 
     const saveContent = () => {
-        if (localContent !== note.content) {
-            onUpdate(localContent);
+        if (saveTimer.current) {
+            clearTimeout(saveTimer.current)
         }
-        onSave();
-    };
+
+        if (localContent !== note.content) {
+            onUpdate(localContent)
+        }
+        onSave()
+    }
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         // Desktop Enter to save
@@ -240,6 +258,15 @@ export const NoteItem = ({
                             className={`w-full bg-transparent text-[16px] leading-[1.75rem] ${theme.text} 
                          outline-none resize-none overflow-hidden font-normal p-0 m-0 block`}
                             spellCheck={false}
+                            onBlur={() => {
+                                if (saveTimer.current) {
+                                    clearTimeout(saveTimer.current)
+                                }
+
+                                if (localContent !== note.content) {
+                                    onUpdate(localContent)
+                                }
+                            }}
                         />
                     </div>
 

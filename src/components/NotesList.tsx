@@ -154,13 +154,60 @@ export const NotesList = ({ notes, onUpdate, onDelete, onAdd, theme, isDark, set
 
 
     const handleNewNoteKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Tab' && suggestion) {
+        // TAB → accept suggestion (desktop only)
+        if (e.key === 'Tab' && suggestion && !isMobile) {
             e.preventDefault();
             acceptSuggestion();
-        } else if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
-            e.preventDefault();
-            saveNewNote();
-        } else if (e.key === 'Escape') {
+            return;
+        }
+
+        if (e.key === 'Enter') {
+            const textarea = e.currentTarget;
+            const value = newNoteContent;
+            const cursorPos = textarea.selectionStart;
+
+            const beforeCursor = value.slice(0, cursorPos);
+            const afterCursor = value.slice(cursorPos);
+
+            const lines = beforeCursor.split('\n');
+            const currentLine = lines[lines.length - 1];
+
+            // 🔥 BULLET CONTINUATION
+            if (currentLine.startsWith('- ')) {
+                e.preventDefault();
+
+                // Exit bullet mode if empty bullet
+                if (currentLine.trim() === '-') {
+                    const newText = beforeCursor + '\n' + afterCursor;
+                    setNewNoteContent(newText);
+
+                    requestAnimationFrame(() => {
+                        textarea.selectionStart = textarea.selectionEnd = cursorPos + 1;
+                    });
+                    return;
+                }
+
+                // Continue bullet
+                const newText = beforeCursor + '\n- ' + afterCursor;
+                setNewNoteContent(newText);
+
+                requestAnimationFrame(() => {
+                    textarea.selectionStart = textarea.selectionEnd = cursorPos + 3;
+                });
+                return;
+            }
+
+            // 🖥 DESKTOP → Enter submits note
+            if (!isMobile && !e.shiftKey) {
+                e.preventDefault();
+                saveNewNote();
+                return;
+            }
+
+            // 📱 MOBILE → allow normal newline
+        }
+
+        if (e.key === 'Escape' && !isMobile) {
             setNewNotePosition(null);
             setNewNoteContent('');
             setSuggestion('');

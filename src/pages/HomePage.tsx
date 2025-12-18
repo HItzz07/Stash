@@ -1,18 +1,18 @@
-import { useState, useMemo } from 'react';
-import type { Theme, SettingsConfig } from '../types';
-import { NotesList } from '../components/NotesList';
-import { FAB } from '../components/FAB';
-import { AddNoteModal } from '../components/AddNoteModal';
+import { useState, useMemo } from 'react'
+import type { Theme, SettingsConfig } from '../types'
+import { NotesList } from '../components/NotesList'
+import { FAB } from '../components/FAB'
+import { AddNoteModal } from '../components/AddNoteModal'
 
 interface HomePageProps {
-    notes: any[];
-    onUpdate: (id: string, content: string) => void;
-    onDelete: (id: string) => void;
-    onAdd: (content: string) => void;
-    theme: Theme;
-    isDark: boolean;
-    settings: SettingsConfig;
-    searchQuery: string;
+    notes: any[]
+    onUpdate: (id: string, content: string) => void
+    onDelete: (id: string) => void
+    onAdd: (content: string) => void
+    theme: Theme
+    isDark: boolean
+    settings: SettingsConfig
+    searchQuery: string
 }
 
 export const HomePage = ({
@@ -23,40 +23,53 @@ export const HomePage = ({
     theme,
     isDark,
     settings,
-    searchQuery
+    searchQuery,
 }: HomePageProps) => {
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false)
+    const [expandedNoteId, setExpandedNoteId] = useState<string | null>(null)
 
     const filteredAndSortedNotes = useMemo(() => {
-        let filtered = notes;
+        let filtered = notes
 
         if (searchQuery) {
-            filtered = notes.filter(n => n.content.toLowerCase().includes(searchQuery.toLowerCase()));
+            filtered = notes.filter(n =>
+                n.content.toLowerCase().includes(searchQuery.toLowerCase())
+            )
         }
 
-        const sorted = [...filtered].sort((a, b) => {
-            let timeA, timeB;
+        // 🔥 Freeze sorting while editing
+        if (expandedNoteId) {
+            return filtered
+        }
+
+        return [...filtered].sort((a, b) => {
+            let timeA: number
+            let timeB: number
 
             if (settings.sortBy === 'updated') {
-                timeA = a.updatedAt || a.createdAt;
-                timeB = b.updatedAt || b.createdAt;
+                timeA = a.updatedAt ?? a.createdAt
+                timeB = b.updatedAt ?? b.createdAt
             } else {
-                timeA = a.createdAt;
-                timeB = b.createdAt;
+                timeA = a.createdAt
+                timeB = b.createdAt
             }
 
-            // Apply sort order
-            return settings.sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
-        });
-
-        return sorted;
-    }, [notes, searchQuery, settings.sortBy, settings.sortOrder]);
-
+            return settings.sortOrder === 'desc'
+                ? timeB - timeA
+                : timeA - timeB
+        })
+    }, [
+        notes,
+        searchQuery,
+        settings.sortBy,
+        settings.sortOrder,
+        expandedNoteId,
+    ])
 
     const handleAddNote = (content: string) => {
-        onAdd(content);
-        setIsModalOpen(false);
-    };
+        onAdd(content)
+        setIsModalOpen(false)
+    }
 
     return (
         <>
@@ -68,6 +81,8 @@ export const HomePage = ({
                 theme={theme}
                 isDark={isDark}
                 settings={settings}
+                expandedNoteId={expandedNoteId}
+                setExpandedNoteId={setExpandedNoteId}
             />
 
             <FAB onClick={() => setIsModalOpen(true)} theme={theme} />
@@ -81,5 +96,5 @@ export const HomePage = ({
                 isDark={isDark}
             />
         </>
-    );
-};
+    )
+}

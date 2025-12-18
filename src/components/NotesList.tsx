@@ -12,11 +12,12 @@ interface NotesListProps {
     theme: Theme;
     isDark: boolean;
     settings: SettingsConfig;
+    expandedNoteId: string | null
+    setExpandedNoteId: (id: string | null) => void
 }
 
 
-export const NotesList = ({ notes, onUpdate, onDelete, onAdd, theme, isDark, settings }: NotesListProps) => {
-    const [expandedNoteId, setExpandedNoteId] = useState<string | null>(null);
+export const NotesList = ({ notes, onUpdate, onDelete, onAdd, theme, isDark, settings, expandedNoteId, setExpandedNoteId }: NotesListProps) => {
     const [pullDistance, setPullDistance] = useState(0);
     const [startY, setStartY] = useState(0);
     const [isAtTop, setIsAtTop] = useState(true);

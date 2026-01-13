@@ -1,19 +1,46 @@
 import { useEffect, useState } from 'react'
 import * as repo from '../db/notesRepository'
+import { authenticate, pb, COLLECTION_ID } from '../lib/pb'
 
 export function useNotes() {
     const [notes, setNotes] = useState<any[]>([])
 
+    const refresh = async () => {
+        await authenticate()
+        const syncedNotes = await repo.syncNotes()
+        setNotes(syncedNotes)
+    }
+
     useEffect(() => {
+        // Initial load
         (async () => {
-            // 1. Instant local load
             const localNotes = await repo.getLocalNotes()
             setNotes(localNotes)
-
-            // 2. Background sync
-            const syncedNotes = await repo.syncNotes()
-            setNotes(syncedNotes)
+            await refresh()
         })()
+
+        // Auto-refresh on focus/visibility
+        const handleFocus = () => refresh()
+
+        window.addEventListener('focus', handleFocus)
+        document.addEventListener('visibilitychange', handleFocus)
+
+        // Real-time updates
+        pb.collection(COLLECTION_ID).subscribe('*', () => {
+            refresh()
+        })
+
+        // Auto-refresh on login/logout
+        const removeAuthListener = pb.authStore.onChange(() => {
+            refresh()
+        })
+
+        return () => {
+            window.removeEventListener('focus', handleFocus)
+            document.removeEventListener('visibilitychange', handleFocus)
+            pb.collection(COLLECTION_ID).unsubscribe('*')
+            removeAuthListener()
+        }
     }, [])
 
     const addNote = async (content: string) => {
@@ -75,6 +102,7 @@ export function useNotes() {
         // For this step, I will stick to the plan: Load local, then sync.
         // I will assume `addNote` updates state locally.
         // Use `repo.getAllNotes` (which is getLocalNotes) to refresh state?
+        refresh()
     }
 
     const updateNote = async (id: string, content: string) => {
@@ -84,11 +112,13 @@ export function useNotes() {
                 n.id === id ? { ...n, content, updatedAt: Date.now() } : n
             )
         )
+        refresh()
     }
 
     const deleteNote = async (id: string) => {
         await repo.deleteNote(id)
         setNotes(prev => prev.filter(n => n.id !== id))
+        refresh()
     }
 
     const importNotes = async (file: File) => {
@@ -113,5 +143,6 @@ export function useNotes() {
         updateNote,
         deleteNote,
         importNotes,
+        refresh,
     }
 }

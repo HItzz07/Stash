@@ -10,7 +10,7 @@ import { getTheme } from './utils/theme';
 import { exportNotesAsJSON } from './utils/exportNotes'
 import { exportSettingsAsJSON } from './utils/exportSettings'
 import { Login } from './pages/Login';
-import { pb } from './lib/pb';
+import { pb, authenticate } from './lib/pb';
 import { Navigate } from 'react-router-dom';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -27,6 +27,11 @@ function App() {
 
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAuthReady, setIsAuthReady] = useState(false);
+
+  useEffect(() => {
+    authenticate().finally(() => setIsAuthReady(true));
+  }, []);
 
   const theme = getTheme(isDark);
 
@@ -46,6 +51,14 @@ function App() {
       window.removeEventListener('beforeunload', handler)
     }
   }, [])
+
+  if (!isAuthReady) {
+    return (
+      <div className={`h-screen w-full ${theme.bg} flex items-center justify-center ${theme.text}`}>
+        Loading...
+      </div>
+    )
+  }
 
   return (
     <BrowserRouter>

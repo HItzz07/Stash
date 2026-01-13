@@ -9,7 +9,16 @@ import { useTheme } from './hooks/useTheme';
 import { getTheme } from './utils/theme';
 import { exportNotesAsJSON } from './utils/exportNotes'
 import { exportSettingsAsJSON } from './utils/exportSettings'
+import { Login } from './pages/Login';
+import { pb } from './lib/pb';
+import { Navigate } from 'react-router-dom';
 
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  if (!pb.authStore.isValid) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
 function App() {
   const { notes, addNote, updateNote, deleteNote, importNotes } = useNotes()
   const { settings, setSettings, addKeyword, removeKeyword, importSettings } = useSettings()
@@ -56,35 +65,43 @@ function App() {
 
           <Routes>
             <Route
+              path="/login"
+              element={<Login theme={theme} isDark={isDark} />}
+            />
+            <Route
               path="/"
               element={
-                <HomePage
-                  notes={notes}
-                  onUpdate={updateNote}
-                  onDelete={deleteNote}
-                  onAdd={addNote}
-                  theme={theme}
-                  isDark={isDark}
-                  settings={settings}
-                  searchQuery={searchQuery}
-                />
+                <ProtectedRoute>
+                  <HomePage
+                    notes={notes}
+                    onUpdate={updateNote}
+                    onDelete={deleteNote}
+                    onAdd={addNote}
+                    theme={theme}
+                    isDark={isDark}
+                    settings={settings}
+                    searchQuery={searchQuery}
+                  />
+                </ProtectedRoute>
               }
             />
             <Route
               path="/settings"
               element={
-                <SettingsPage
-                  settings={settings}
-                  setSettings={setSettings}
-                  addKeyword={addKeyword}
-                  removeKeyword={removeKeyword}
-                  onExport={exportNotesAsJSON}
-                  onImport={importNotes}
-                  onExportSettings={exportSettingsAsJSON}
-                  onImportSettings={importSettings}
-                  theme={theme}
-                  isDark={isDark}
-                />
+                <ProtectedRoute>
+                  <SettingsPage
+                    settings={settings}
+                    setSettings={setSettings}
+                    addKeyword={addKeyword}
+                    removeKeyword={removeKeyword}
+                    onExport={exportNotesAsJSON}
+                    onImport={importNotes}
+                    onExportSettings={exportSettingsAsJSON}
+                    onImportSettings={importSettings}
+                    theme={theme}
+                    isDark={isDark}
+                  />
+                </ProtectedRoute>
               }
             />
           </Routes>

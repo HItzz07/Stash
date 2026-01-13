@@ -1,7 +1,7 @@
-import { getAllNotes } from '../db/notesRepository'
+import { getLocalNotes } from '../db/notesRepository'
 
 export async function exportNotesAsJSON() {
-    const notes = await getAllNotes()
+    const notes = await getLocalNotes()
 
     const payload = {
         version: 1,

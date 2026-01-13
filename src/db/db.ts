@@ -10,6 +10,7 @@ export interface StashDB extends DBSchema {
             createdAt: number
             updatedAt: number
             deleted?: boolean
+            user_id?: string
         }
         indexes: { 'by-updatedAt': number }
     }

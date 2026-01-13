@@ -51,7 +51,7 @@ export async function syncNotes() {
     }
 
     await tx.done;
-    return db.getAll('notes');
+    return await getLocalNotes();
 }
 
 export async function addNote(content: string) {

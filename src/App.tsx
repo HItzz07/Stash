@@ -10,6 +10,7 @@ import { getTheme } from './utils/theme';
 import { exportNotesAsJSON } from './utils/exportNotes'
 import { exportSettingsAsJSON } from './utils/exportSettings'
 import { Login } from './pages/Login';
+import { Register } from './pages/Register';
 import { pb, authenticate } from './lib/pb';
 import { Navigate } from 'react-router-dom';
 
@@ -80,6 +81,10 @@ function App() {
             <Route
               path="/login"
               element={<Login theme={theme} isDark={isDark} />}
+            />
+            <Route
+              path="/register"
+              element={<Register theme={theme} isDark={isDark} />}
             />
             <Route
               path="/"
